@@ -24,3 +24,48 @@ HTTP가 클라이언트에서 서버로 향하는 단방향 통신이므로 주�
 `Socket.IO`는 웹 소켓을 편리하게 사용할 수 있도록 도와주는 라이브러리입니다. Socket.IO는 웹 소켓을 지원하지 않는 IE9과 같은 브라우저에서는 알아서 웹 소켓 대신 폴링 방식을 사용하여 실시간 데이터 전송을 가능하게 합니다. 클라이언트 측에서 웹 소켓 연결이 끊겼다면 자동으로 재연결을 시도하고, 채팅방을 쉽게 구현할 수 있도록 메서드를 준비해 두었습니다.
 
 
+## ws Module
+
+```javascript
+import WebSocket from "ws";
+
+module.exports = (server) => {
+  const wss = new WebSocket.Server({ server });
+
+  wss.on("connection", (ws, req) => {
+    // 웹소켓 연결 시
+    const ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress;
+    console.log("새로운 클라이언트 접속", ip);
+    ws.on("message", (message) => {
+      // 클라이언트로부터 메시지
+      console.log(message);
+    });
+    ws.on("error", (error) => {
+      // 에러 시
+      console.error(error);
+    });
+    ws.on("close", () => {
+      // 연결 종료 시
+      console.log("클라이언트 접속 해제", ip);
+      clearInterval(ws.interval);
+    });
+
+    ws.interval = setInterval(() => {
+      // 3초마다 클라이언트로 메시지 전송
+      if (ws.readyState === ws.OPEN) {
+        ws.send("서버에서 클라이언트로 메시지를 보냅니다.");
+      }
+    }, 3000);
+  });
+};
+```
+
+ws 모듈을 불러온 후 익스프레스 서버를 웹 소켓 서버와 연결했다. 익스프레스(HTTP)와 웹 소켓(WS)은 같은 포트를 공유할 수 있으므로 별도의 작업이 필요하지 않다.
+
+![Screen Shot 2021-10-03 at 11 05 59 AM](https://user-images.githubusercontent.com/44861205/135736911-98034cf5-6d19-4f4e-8265-833c2776530f.png)
+
+연결 후에는 웹 소켓 서버(wss)에 이벤트 리스너를 붙입니다. 웹 소켓은 이벤트 기반으로 작동한다고 생각하면 됩니다. 실시간으로 데이터를 전달받으므로 항상 대기하고 있어야 합니다. `connection` 이벤트는 클라이언트가 서버와 웹 소켓 연결을 맺을 때 발생합니다. `req.headers['x-forwarded-for']`는 프록시 서버의 IP주소를 알고싶을때 사용하며 req.connection.remoteAddress는 클라이언트의 IP주소를 알아내기위한 유명한 방법입니다. Express의 Request객체로 `req.ip`로도 알수 있습니다. 또한 Express에서는 `proxy-addr`패키지를 사용해서도 IP를 알수 있습니다. 로컬 호스트로 접속한 경우, 크롬에서는 IP가 `::1`로 뜹니다 이 주소체계는 `IPv6`의 locallhost입니다. 다른 브라우저에서는 ::1 외에 다른 IP가 뜰 수 있습니다.
+
+웹 소켓에서는 CONNECTING(연결 중), OPEN(열림), CLOSING(닫는 중), CLOSED(닫힘)의 4가지 상태가 있습니다. OPEN 일때만 에러 없이 메시지를 보낼 수 있습니다.
+
+브라우저 개수만큼 서버에는 배수로 Client로부터의 메시지를 받을 것이며 브라우저가 닫히면 연결이 해제됬다는 로그가 서버측에 출력이 됩니다.
