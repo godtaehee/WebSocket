@@ -9,6 +9,7 @@ import dotenv from "dotenv";
 dotenv.config();
 import webSocket from "./socket";
 import indexRouter from "./routes";
+import connect from "./schemas";
 
 const app = express();
 app.set("port", process.env.PORT || 8000);
@@ -17,6 +18,7 @@ nunjucks.configure("views", {
   express: app,
   watch: true,
 });
+connect();
 
 app.use(morgan("dev"));
 app.use(express.static(path.join(__dirname, "public")));
