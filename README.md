@@ -69,3 +69,60 @@ ws 모듈을 불러온 후 익스프레스 서버를 웹 소켓 서버와 연결
 웹 소켓에서는 CONNECTING(연결 중), OPEN(열림), CLOSING(닫는 중), CLOSED(닫힘)의 4가지 상태가 있습니다. OPEN 일때만 에러 없이 메시지를 보낼 수 있습니다.
 
 브라우저 개수만큼 서버에는 배수로 Client로부터의 메시지를 받을 것이며 브라우저가 닫히면 연결이 해제됬다는 로그가 서버측에 출력이 됩니다.
+
+## Socket.io
+
+```javascript
+  const io = SocketIO(server, { path: "/socket.io" });
+```
+
+SocketIO 객체의 두 번째 인수로 옵션 객체를 넣어 서버에 관한 여러가지 설정을 할 수 있습니다. path는 클라이언트가 접속할 경로를 나타내며 클라이언트도 이 경로와 일치하는 path를 넣어야합니다.
+
+connection 이벤트는 클라이언트가 접속했을 때 발생하고, 콜백으로 소켓 객체(socket)을 제공합니다.
+
+socket.request속성으로 요청 객체에 접근할 수 있습니다.
+
+socket.request.res로는 응답 객체에 접근할 수 있습니다.
+
+socket.id로 소켓 고유의 아이디를 가져올 수 있습니다. 이 아이디로 소켓의 주인이 누구인지 특정할 수 있습니다.
+
+```javascript
+socket.emit("news", "Hello Socket.IO");
+```
+
+socket에도 이벤트 리스너를 붙일수있으며 disconnect news라는 이벤트를 만들었습니다. 이 news이벤트는 사용자가 마음대로 정의한 이벤트 이름이여 이것이 `ws`모듈과 `socket.io`의 다른 점입니다.
+
+클라이언트에서 news이벤트를 받기위해서는 똑같이 클라이언트에도 new 이벤트 리스너를 만들어두어야 합니다.
+
+```javascript
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>GIF 채팅방</title>
+</head>
+<body>
+  <div>F12를 눌러 console 탭과 network 탭을 확인하세요.</div>
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    // http를 사용함
+    const socket = io.connect('http://localhost:3000', {
+      path: '/socket.io',
+      transports: ['websocket'],
+    });
+    socket.on('news', function (data) {
+      console.log(data);
+      socket.emit('reply', 'Hello Node.JS');
+    });
+  </script>
+</body>
+</html>
+```
+
+`/socket.io/socket.io.js`는 Socket.IO에서 클라이언트로 제공하는 스크립트이며, 실제 파일이 아닙니다. 이 스크립트를 통해 서버와 유사한 API로 웹 소켓 통신이 가능합니다. 스크립트가 제공하는 io객체에 서버 주소를 적어 연결합니다. 이때 http를 사용하였는데 Socket.IO는 처음에는 폴링 방식으로 서버와 연결을 하기 때문입니다. 폴링 연결(xhr) 후, 웹 소켓을 사용할 수 있다면 웹 소켓으로 업그레이드를 합니다.
+
+웹 소켓을 지원하지 않는 브라우저는 폴링 방식으로, 웹 소켓을 지원하는 브라우저는 웹 소켓 방식으로 사용 가능한 것입니다.
+
+처음 부터 웹 소켓만 사용하고 싶다면, 클라이언트에서 다음과 같이 `transport: ['websocket']`옵션을 주면됩니다.
+
+
