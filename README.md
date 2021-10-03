@@ -64,7 +64,7 @@ ws 모듈을 불러온 후 익스프레스 서버를 웹 소켓 서버와 연결
 
 ![Screen Shot 2021-10-03 at 11 05 59 AM](https://user-images.githubusercontent.com/44861205/135736911-98034cf5-6d19-4f4e-8265-833c2776530f.png)
 
-연결 후에는 웹 소켓 서버(wss)에 이벤트 리스너를 붙입니다. 웹 소켓은 이벤트 기반으로 작동한다고 생각하면 됩니다. 실시간으로 데이터를 전달받으므로 항상 대기하고 있어야 합니다. `connection` 이벤트는 클라이언트가 서버와 웹 소켓 연결을 맺을 때 발생합니다. `req.headers['x-forwarded-for']`는 프록시 서버의 IP주소를 알고싶을때 사용하며 req.connection.remoteAddress는 클라이언트의 IP주소를 알아내기위한 유명한 방법입니다. Express의 Request객체로 `req.ip`로도 알수 있습니다. 또한 Express에서는 `proxy-addr`패키지를 사용해서도 IP를 알수 있습니다. 로컬 호스트로 접속한 경우, 크롬에서는 IP가 `::1`로 뜹니다 이 주소체계는 `IPv6`의 locallhost입니다. 다른 브라우저에서는 ::1 외에 다른 IP가 뜰 수 있습니다.
+연결 후에는 웹 소켓 서버(wss)에 이벤트 리스너를 붙입니다. 웹 소켓은 이벤트 기반으로 작동한다고 생각하면 됩니다. 실시간으로 데이터를 전달받으므로 항상 대기하고 있어야 합니다. `connection` 이벤트는 클라이언트가 서버와 웹 소켓 연결을 맺을 때 발생합니다. `req.headers['x-forwarded-for']`는 프록시 서버의 IP주소를 알고싶을때 사용하며 `req.connection.remoteAddress`는 클라이언트의 IP주소를 알아내기위한 유명한 방법입니다. 하지만 노드 13이상에서부터는 deprecated된 방법이므로 `req.socket.remoteAddress`를 사용합니다. Express의 Request객체로 `req.ip`로도 알수 있습니다. 또한 Express에서는 `proxy-addr`패키지를 사용해서도 IP를 알수 있습니다. 로컬 호스트로 접속한 경우, 크롬에서는 IP가 `::1`로 뜹니다 이 주소체계는 `IPv6`의 locallhost입니다. 다른 브라우저에서는 ::1 외에 다른 IP가 뜰 수 있습니다.
 
 웹 소켓에서는 CONNECTING(연결 중), OPEN(열림), CLOSING(닫는 중), CLOSED(닫힘)의 4가지 상태가 있습니다. OPEN 일때만 에러 없이 메시지를 보낼 수 있습니다.
 
