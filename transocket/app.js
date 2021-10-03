@@ -5,6 +5,7 @@ import cookieParser from "cookie-parser";
 import session from "express-session";
 import nunjucks from "nunjucks";
 import dotenv from "dotenv";
+import ColorHash from "color-hash";
 
 dotenv.config();
 import webSocket from "./socket";
@@ -20,11 +21,22 @@ nunjucks.configure("views", {
 });
 connect();
 
+const sessionMiddleware = session({
+  resave: false,
+  saveUninitialized: false,
+  secret: process.env.COOKIE_SECRET,
+  cookie: {
+    httpOnly: true,
+    secure: false,
+  },
+});
+
 app.use(morgan("dev"));
 app.use(express.static(path.join(__dirname, "public")));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser(process.env.COOKIE_SECRET));
+app.use(sessionMiddleware);
 app.use(
   session({
     resave: false,
@@ -36,6 +48,13 @@ app.use(
     },
   })
 );
+app.use((req, reds, next) => {
+  if (!req.session.color) {
+    const colorHash = new ColorHash();
+    req.session.color = colorHash.hex(req.sessionID);
+  }
+  next();
+});
 
 app.use("/", indexRouter);
 
@@ -56,4 +75,4 @@ const server = app.listen(app.get("port"), () => {
   console.log(`http://localhost:${app.get("port")}`);
 });
 
-webSocket(server);
+webSocket(server, app, sessionMiddleware);
