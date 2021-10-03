@@ -1,4 +1,4 @@
-const SocketIO = require("socket.io");
+import SocketIO from "socket.io";
 
 module.exports = (server) => {
   const io = SocketIO(server, { path: "/socket.io" });
